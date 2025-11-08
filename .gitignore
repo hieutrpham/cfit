@@ -1,0 +1,5 @@
+main
+obj/
+/compile_commands.json
+.cache/
+Session.vim
