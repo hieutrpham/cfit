@@ -2,8 +2,14 @@
 #include <string.h>
 #include "fit_convert.h"
 #include "fit_example.h"
+#include <raylib.h>
 #define FIT_CONVERT_TIME_RECORD
 #define FIT_CONVERT_CHECK_CRC
+#define WIDTH 800
+#define HEIGHT 600
+
+int buffer[1024*1024*5] = {0};
+size_t count = 0;
 
 int main(int argc, char* argv[])
 {
@@ -11,11 +17,10 @@ int main(int argc, char* argv[])
 	FIT_UINT8 buf[8];
 	FIT_CONVERT_RETURN convert_return = FIT_CONVERT_CONTINUE;
 	FIT_UINT32 buf_size;
-	// FIT_UINT32 mesg_index = 0;
 
 	if (argc < 2)
 	{
-		printf("usage: decode.exe <fit file>");
+		printf("usage: ./main <fit file>");
 		return FIT_FALSE;
 	}
 
@@ -48,11 +53,11 @@ int main(int argc, char* argv[])
 							case FIT_MESG_NUM_RECORD:
 								{
 									const FIT_RECORD_MESG *record = (FIT_RECORD_MESG *) mesg;
-									printf("Record: timestamp=%u\n", record->timestamp);
-									printf("Record: heart_rate=%u\n", record->heart_rate);
-									printf("Record: distance=%u\n", record->distance);
-									printf("Record: speed=%u\n", record->speed);
-									printf("\n");
+									buffer[count++] = record->heart_rate;
+									// printf("Record: timestamp=%u\n", record->timestamp);
+									// printf("Record: heart_rate=%d\n", record->heart_rate);
+									// printf("Record: distance=%u\n", record->distance);
+									// printf("Record: speed=%u\n", record->speed);
 									break;
 								}
 							default:
@@ -100,5 +105,19 @@ int main(int argc, char* argv[])
 
 	fclose(file);
 
+	InitWindow(800, 600, "run");
+	while (!WindowShouldClose())
+	{
+		BeginDrawing();
+		ClearBackground(BLACK);
+		int i = 0;
+		while (buffer[i])
+		{
+			DrawCircle(i + 50, HEIGHT - buffer[i] - 200, 1, RED);
+			i++;
+		}
+		EndDrawing();
+	}
+	CloseWindow();
 	return 0;
 }
