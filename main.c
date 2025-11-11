@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "fit_convert.h"
@@ -7,9 +8,57 @@
 #define FIT_CONVERT_CHECK_CRC
 #define WIDTH 1920
 #define HEIGHT 1080
+#define LEFT_PAD 100
+#define DATA_SIZE 1024*5
 
-int buffer[1024*1024*5] = {0};
-size_t count = 0;
+int hr_buffer[DATA_SIZE] = {0};
+size_t hr_count = 0;
+uint32_t timestamp[DATA_SIZE] = {0};
+size_t ts_count = 0;
+uint32_t distance[DATA_SIZE] = {0};
+size_t distance_count = 0;
+
+int linear_scale(int data_min, int data_max, int pixel_min, int pixel_max, int value)
+{
+	int ratio = (pixel_max - pixel_min)/(data_max - data_min);
+	return pixel_min + (value - data_min)*ratio;
+}
+
+int find_min(int *buf, size_t buf_size)
+{
+	if (buf_size <= 0)
+	{
+		fprintf(stderr, "ERROR: empty hr_buffer\n");
+		exit(1);
+	}
+	int min = buf[0];
+	size_t i = 0;
+	while (i < buf_size)
+	{
+		if (buf[i] < min)
+			min = buf[i];
+		i++;
+	}
+	return min;
+}
+
+int find_max(int *buf, size_t buf_size)
+{
+	if (buf_size <= 0)
+	{
+		fprintf(stderr, "ERROR: empty buffer\n");
+		exit(1);
+	}
+	int max = buf[0];
+	size_t i = 0;
+	while (i < buf_size)
+	{
+		if (buf[i] > max)
+			max = buf[i];
+		i++;
+	}
+	return max;
+}
 
 int main(int argc, char* argv[])
 {
@@ -47,17 +96,14 @@ int main(int argc, char* argv[])
 					{
 						const FIT_UINT8 *mesg = FitConvert_GetMessageData();
 						FIT_UINT16 mesg_num = FitConvert_GetMessageNumber();
-						// printf("mesg num: %d\n", mesg_num);
 						switch(mesg_num)
 						{
 							case FIT_MESG_NUM_RECORD:
 								{
 									const FIT_RECORD_MESG *record = (FIT_RECORD_MESG *) mesg;
-									buffer[count++] = record->heart_rate;
-									// printf("Record: timestamp=%u\n", record->timestamp);
-									// printf("Record: heart_rate=%d\n", record->heart_rate);
-									// printf("Record: distance=%u\n", record->distance);
-									// printf("Record: speed=%u\n", record->speed);
+									hr_buffer[hr_count++] = record->heart_rate;
+									timestamp[ts_count++] = record->timestamp;
+									distance[distance_count++] = record->distance;
 									break;
 								}
 							default:
@@ -71,49 +117,56 @@ int main(int argc, char* argv[])
 			}
 		} while (convert_return == FIT_CONVERT_MESSAGE_AVAILABLE);
 	}
-
 	if (convert_return == FIT_CONVERT_ERROR)
 	{
 		printf("Error decoding file.\n");
 		fclose(file);
 		return 1;
 	}
-
 	if (convert_return == FIT_CONVERT_CONTINUE)
 	{
 		printf("Unexpected end of file.\n");
 		fclose(file);
 		return 1;
 	}
-
 	if (convert_return == FIT_CONVERT_DATA_TYPE_NOT_SUPPORTED)
 	{
 		printf("File is not FIT.\n");
 		fclose(file);
 		return 1;
 	}
-
 	if (convert_return == FIT_CONVERT_PROTOCOL_VERSION_NOT_SUPPORTED)
 	{
 		printf("Protocol version not supported.\n");
 		fclose(file);
 		return 1;
 	}
-
 	if (convert_return == FIT_CONVERT_END_OF_FILE)
 		printf("File converted successfully.\n");
-
 	fclose(file);
 
+	for (size_t i = 0; i < ts_count; i ++)
+		printf("timestamp: %d\n", timestamp[i]);
+
+	for (size_t i = 0; i < distance_count; i ++)
+		printf("distance (m): %d\n", distance[i]/100);
+
+	int hr_max = find_max(hr_buffer, hr_count);
+	int hr_min = find_min(hr_buffer, hr_count);
 	InitWindow(WIDTH, HEIGHT, "run");
 	while (!WindowShouldClose())
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
-		int i = 0;
-		while (buffer[i])
+		size_t i = 0;
+		// NOTE: draw HR data
+		while (i < hr_count)
 		{
-			DrawCircle(i + 50, HEIGHT - buffer[i] - 200, 1, RED);
+			DrawCircle(
+				LEFT_PAD + linear_scale(0, hr_count, 0, WIDTH, i),
+				HEIGHT - linear_scale(hr_min, hr_max, 0, HEIGHT, hr_buffer[i]),
+				2,
+				RED);
 			i++;
 		}
 		EndDrawing();

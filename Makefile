@@ -17,10 +17,10 @@ all: $(NAME)
 
 $(OBJ_PATH)%.o: $(SRC_PATH)%.c
 	@mkdir -p $(OBJ_PATH)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
+	$(CC) $(FLAGS) $(INCLUDE) -o $@ -c $<
 
 $(OBJS_MAIN): $(SRC_MAIN)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
+	$(CC) $(FLAGS) $(INCLUDE) -o $@ -c $<
 
 $(NAME): $(OBJS) $(OBJS_MAIN)
 	$(CC) $(INCLUDE) $(FLAGS) $^ -o $@ $(LIB)
