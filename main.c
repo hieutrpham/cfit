@@ -5,8 +5,8 @@
 #include <raylib.h>
 #define FIT_CONVERT_TIME_RECORD
 #define FIT_CONVERT_CHECK_CRC
-#define WIDTH 800
-#define HEIGHT 600
+#define WIDTH 1920
+#define HEIGHT 1080
 
 int buffer[1024*1024*5] = {0};
 size_t count = 0;
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 
 	fclose(file);
 
-	InitWindow(800, 600, "run");
+	InitWindow(WIDTH, HEIGHT, "run");
 	while (!WindowShouldClose())
 	{
 		BeginDrawing();
