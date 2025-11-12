@@ -6,32 +6,30 @@
 #include <raylib.h>
 #define FIT_CONVERT_TIME_RECORD
 #define FIT_CONVERT_CHECK_CRC
-#define WIDTH 1920
-#define HEIGHT 1080
+#define WIDTH 800
+#define HEIGHT 600
 #define LEFT_PAD 100
 #define DATA_SIZE 1024*5
 
-int hr_buffer[DATA_SIZE] = {0};
+uint32_t hr_buffer[DATA_SIZE] = {0};
 size_t hr_count = 0;
-uint32_t timestamp[DATA_SIZE] = {0};
-size_t ts_count = 0;
-uint32_t distance[DATA_SIZE] = {0};
-size_t distance_count = 0;
+uint32_t speed[DATA_SIZE] = {0};
+size_t speed_count = 0;
 
-int linear_scale(int data_min, int data_max, int pixel_min, int pixel_max, int value)
+float linear_scale(int data_min, int data_max, int pixel_min, int pixel_max, int value)
 {
 	int ratio = (pixel_max - pixel_min)/(data_max - data_min);
 	return pixel_min + (value - data_min)*ratio;
 }
 
-int find_min(int *buf, size_t buf_size)
+uint32_t find_min(uint32_t *buf, size_t buf_size)
 {
 	if (buf_size <= 0)
 	{
 		fprintf(stderr, "ERROR: empty hr_buffer\n");
 		exit(1);
 	}
-	int min = buf[0];
+	uint32_t min = buf[0];
 	size_t i = 0;
 	while (i < buf_size)
 	{
@@ -42,14 +40,14 @@ int find_min(int *buf, size_t buf_size)
 	return min;
 }
 
-int find_max(int *buf, size_t buf_size)
+uint32_t find_max(uint32_t *buf, size_t buf_size)
 {
 	if (buf_size <= 0)
 	{
 		fprintf(stderr, "ERROR: empty buffer\n");
 		exit(1);
 	}
-	int max = buf[0];
+	uint32_t max = buf[0];
 	size_t i = 0;
 	while (i < buf_size)
 	{
@@ -102,8 +100,7 @@ int main(int argc, char* argv[])
 								{
 									const FIT_RECORD_MESG *record = (FIT_RECORD_MESG *) mesg;
 									hr_buffer[hr_count++] = record->heart_rate;
-									timestamp[ts_count++] = record->timestamp;
-									distance[distance_count++] = record->distance;
+									speed[speed_count++] = 1000*1000/(60*((float)record->speed));
 									break;
 								}
 							default:
@@ -145,28 +142,31 @@ int main(int argc, char* argv[])
 		printf("File converted successfully.\n");
 	fclose(file);
 
-	for (size_t i = 0; i < ts_count; i ++)
-		printf("timestamp: %d\n", timestamp[i]);
-
-	for (size_t i = 0; i < distance_count; i ++)
-		printf("distance (m): %d\n", distance[i]/100);
-
-	int hr_max = find_max(hr_buffer, hr_count);
-	int hr_min = find_min(hr_buffer, hr_count);
+	uint32_t hr_max = find_max(hr_buffer, hr_count);
+	uint32_t hr_min = find_min(hr_buffer, hr_count);
+	uint32_t speed_max = find_max(speed, speed_count);
+	uint32_t speed_min = find_min(speed, speed_count);
 	InitWindow(WIDTH, HEIGHT, "run");
 	while (!WindowShouldClose())
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
 		size_t i = 0;
-		// NOTE: draw HR data
 		while (i < hr_count)
 		{
 			DrawCircle(
 				LEFT_PAD + linear_scale(0, hr_count, 0, WIDTH, i),
 				HEIGHT - linear_scale(hr_min, hr_max, 0, HEIGHT, hr_buffer[i]),
 				2,
-				RED);
+				RED
+				);
+			// printf("INFO: %u\n",linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]));
+			DrawRectangle(
+				LEFT_PAD + linear_scale(0, speed_count, 0, WIDTH, i),
+				HEIGHT,
+				20,
+				HEIGHT - linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]),
+				YELLOW);
 			i++;
 		}
 		EndDrawing();
