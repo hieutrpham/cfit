@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,10 +7,15 @@
 #include <raylib.h>
 #define FIT_CONVERT_TIME_RECORD
 #define FIT_CONVERT_CHECK_CRC
-#define WIDTH 800
-#define HEIGHT 600
 #define LEFT_PAD 100
 #define DATA_SIZE 1024*5
+#if 1
+#define WIDTH 1920
+#define HEIGHT 1080
+#else
+#define WIDTH 800
+#define HEIGHT 600
+#endif
 
 uint32_t hr_buffer[DATA_SIZE] = {0};
 size_t hr_count = 0;
@@ -18,7 +24,7 @@ size_t speed_count = 0;
 
 float linear_scale(int data_min, int data_max, int pixel_min, int pixel_max, int value)
 {
-	int ratio = (pixel_max - pixel_min)/(data_max - data_min);
+	float ratio = (pixel_max - pixel_min)/(data_max - data_min);
 	return pixel_min + (value - data_min)*ratio;
 }
 
@@ -56,6 +62,13 @@ uint32_t find_max(uint32_t *buf, size_t buf_size)
 		i++;
 	}
 	return max;
+}
+
+/* @brief: convert speed ms to min/km. speed is in 1000*m/s
+ */
+float convert_min_km(float ms)
+{
+	return 1000*1000/(60*ms);
 }
 
 int main(int argc, char* argv[])
@@ -100,7 +113,8 @@ int main(int argc, char* argv[])
 								{
 									const FIT_RECORD_MESG *record = (FIT_RECORD_MESG *) mesg;
 									hr_buffer[hr_count++] = record->heart_rate;
-									speed[speed_count++] = 1000*1000/(60*((float)record->speed));
+									// speed[speed_count++] = convert_min_km(record->speed);
+									speed[speed_count++] = record->speed;
 									break;
 								}
 							default:
@@ -146,6 +160,7 @@ int main(int argc, char* argv[])
 	uint32_t hr_min = find_min(hr_buffer, hr_count);
 	uint32_t speed_max = find_max(speed, speed_count);
 	uint32_t speed_min = find_min(speed, speed_count);
+	printf("speed max: %u, speed min: %u\n", speed_max, speed_min);
 	InitWindow(WIDTH, HEIGHT, "run");
 	while (!WindowShouldClose())
 	{
@@ -160,12 +175,14 @@ int main(int argc, char* argv[])
 				2,
 				RED
 				);
-			// printf("INFO: %u\n",linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]));
-			DrawRectangle(
+			// printf("INFO: %f\n", fmin(linear_scale(0, 7, 0, HEIGHT, speed[i]), HEIGHT));
+			// printf("INFO: %u\n", speed[i]);
+			// printf("%f\n", linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]));
+			DrawRectangleLines(
 				LEFT_PAD + linear_scale(0, speed_count, 0, WIDTH, i),
 				HEIGHT,
-				20,
-				HEIGHT - linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]),
+				2,
+				(int)(fmin(linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
 				YELLOW);
 			i++;
 		}
