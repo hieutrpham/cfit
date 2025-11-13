@@ -113,8 +113,8 @@ int main(int argc, char* argv[])
 								{
 									const FIT_RECORD_MESG *record = (FIT_RECORD_MESG *) mesg;
 									hr_buffer[hr_count++] = record->heart_rate;
-									// speed[speed_count++] = convert_min_km(record->speed);
-									speed[speed_count++] = record->speed;
+									speed[speed_count++] = convert_min_km(record->speed);
+									// speed[speed_count++] = record->speed;
 									break;
 								}
 							default:
@@ -182,7 +182,8 @@ int main(int argc, char* argv[])
 				LEFT_PAD + linear_scale(0, speed_count, 0, WIDTH, i),
 				HEIGHT,
 				2,
-				(int)(fmin(linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
+				// (int)(fmin(linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
+				(int)(fmin(linear_scale(0, 7, 0, HEIGHT, speed[i]), HEIGHT)) - HEIGHT,
 				YELLOW);
 			i++;
 		}
