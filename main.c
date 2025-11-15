@@ -28,8 +28,9 @@ float get_pixel(int data_min, int data_max, int pixel_min, int pixel_max, int va
 	return pixel_min + (value - data_min)*ratio;
 }
 
-int get_value(int pixel_min, int data_min, int pixel, float ratio)
+int get_value(int data_min, int data_max, int pixel_min, int pixel_max, int pixel)
 {
+	float ratio = (pixel_max - pixel_min)/(data_max - data_min);
 	int value = (pixel - pixel_min)/ratio + data_min;
 	return value;
 }
@@ -169,16 +170,16 @@ int main(int argc, char* argv[])
 	// uint32_t speed_max = find_max(speed, speed_count);
 	// uint32_t speed_min = find_min(speed, speed_count);
 	// printf("speed max: %u, speed min: %u\n", speed_max, speed_min);
-	printf("speed count: %zu, speed count: %zu\n", hr_count, speed_count);
+	// printf("speed count: %zu, speed count: %zu\n", hr_count, speed_count);
 	InitWindow(WIDTH, HEIGHT, "run");
-	float ratio = WIDTH/hr_count;
 	while (!WindowShouldClose())
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
 		size_t i = 0;
-		DrawText(TextFormat("HR: %d\nY: %d", hr_buffer[get_value(0, hr_count, GetMouseX(), ratio)], GetMouseY()), 0, 0, 40, GREEN);
-		printf("HR: %d\n", get_value(0, hr_count, GetMouseX(), ratio));
+		int index = get_value(0, hr_count, 0, WIDTH, GetMouseX());
+		DrawText(TextFormat("HR: %zu\nY: %d", hr_buffer[index], GetMouseY()), 0, 0, 40, GREEN);
+		printf("index: %d, hr_buffer at index: %u\n", index, hr_buffer[index]); // looks like pixel value
 		while (i < hr_count)
 		{
 			DrawCircle(
