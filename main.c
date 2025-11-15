@@ -8,8 +8,8 @@
 #define FIT_CONVERT_TIME_RECORD
 #define FIT_CONVERT_CHECK_CRC
 #define LEFT_PAD 100
-#define DATA_SIZE 1024*5
-#if 1
+#define DATA_SIZE 1024
+#if 0
 #define WIDTH 1920
 #define HEIGHT 1080
 #else
@@ -22,10 +22,16 @@ size_t hr_count = 0;
 uint32_t speed[DATA_SIZE] = {0};
 size_t speed_count = 0;
 
-float linear_scale(int data_min, int data_max, int pixel_min, int pixel_max, int value)
+float get_pixel(int data_min, int data_max, int pixel_min, int pixel_max, int value)
 {
 	float ratio = (pixel_max - pixel_min)/(data_max - data_min);
 	return pixel_min + (value - data_min)*ratio;
+}
+
+int get_value(int pixel_min, int data_min, int pixel, float ratio)
+{
+	int value = (pixel - pixel_min)/ratio + data_min;
+	return value;
 }
 
 uint32_t find_min(uint32_t *buf, size_t buf_size)
@@ -156,34 +162,37 @@ int main(int argc, char* argv[])
 		printf("File converted successfully.\n");
 	fclose(file);
 
+	// NOTE: parsing done
+
 	uint32_t hr_max = find_max(hr_buffer, hr_count);
 	uint32_t hr_min = find_min(hr_buffer, hr_count);
-	uint32_t speed_max = find_max(speed, speed_count);
-	uint32_t speed_min = find_min(speed, speed_count);
-	printf("speed max: %u, speed min: %u\n", speed_max, speed_min);
+	// uint32_t speed_max = find_max(speed, speed_count);
+	// uint32_t speed_min = find_min(speed, speed_count);
+	// printf("speed max: %u, speed min: %u\n", speed_max, speed_min);
+	printf("speed count: %zu, speed count: %zu\n", hr_count, speed_count);
 	InitWindow(WIDTH, HEIGHT, "run");
+	float ratio = WIDTH/hr_count;
 	while (!WindowShouldClose())
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
 		size_t i = 0;
+		DrawText(TextFormat("HR: %d\nY: %d", hr_buffer[get_value(0, hr_count, GetMouseX(), ratio)], GetMouseY()), 0, 0, 40, GREEN);
+		printf("HR: %d\n", get_value(0, hr_count, GetMouseX(), ratio));
 		while (i < hr_count)
 		{
 			DrawCircle(
-				LEFT_PAD + linear_scale(0, hr_count, 0, WIDTH, i),
-				HEIGHT - linear_scale(hr_min, hr_max, 0, HEIGHT, hr_buffer[i]),
+				LEFT_PAD + get_pixel(0, hr_count, 0, WIDTH, i),
+				HEIGHT - get_pixel(hr_min, hr_max, 0, HEIGHT, hr_buffer[i]),
 				2,
 				RED
 				);
-			// printf("INFO: %f\n", fmin(linear_scale(0, 7, 0, HEIGHT, speed[i]), HEIGHT));
-			// printf("INFO: %u\n", speed[i]);
-			// printf("%f\n", linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]));
 			DrawRectangleLines(
-				LEFT_PAD + linear_scale(0, speed_count, 0, WIDTH, i),
+				LEFT_PAD + get_pixel(0, speed_count, 0, WIDTH, i),
 				HEIGHT,
 				2,
 				// (int)(fmin(linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
-				(int)(fmin(linear_scale(0, 7, 0, HEIGHT, speed[i]), HEIGHT)) - HEIGHT,
+				(int)(fmin(get_pixel(0, 7, 0, HEIGHT, speed[i]), HEIGHT)) - HEIGHT,
 				YELLOW);
 			i++;
 		}
