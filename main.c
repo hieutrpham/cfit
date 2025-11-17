@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,7 +10,7 @@
 #define FIT_CONVERT_CHECK_CRC
 #define LEFT_PAD 0
 #define DATA_SIZE 1024
-#if 0
+#if 1
 #define WIDTH 1920
 #define HEIGHT 1080
 #define TEXT_SIZE 40
@@ -20,14 +21,14 @@
 #endif
 
 uint32_t hr_buffer[DATA_SIZE] = {0};
-size_t hr_count = 0;
-float speed[DATA_SIZE] = {0};
-size_t speed_count = 0;
+size_t count = 0;
+uint32_t speed[DATA_SIZE] = {0};
+float pace[DATA_SIZE] = {0};
 
 float get_pixel(int data_min, int data_max, int pixel_min, int pixel_max, int value)
 {
-	float ratio = (pixel_max - pixel_min)/(data_max - data_min);
-	return pixel_min + (value - data_min)*ratio;
+	float ratio = (float)(pixel_max - pixel_min)/(float)(data_max - data_min);
+	return (float)pixel_min + (float)(value - data_min)*ratio;
 }
 
 int get_value(int data_min, int data_max, int pixel_min, int pixel_max, int pixel)
@@ -121,9 +122,10 @@ int main(int argc, char* argv[])
 							case FIT_MESG_NUM_RECORD:
 								{
 									const FIT_RECORD_MESG *record = (FIT_RECORD_MESG *) mesg;
-									hr_buffer[hr_count++] = record->heart_rate;
-									speed[speed_count++] = convert_min_km(record->speed);
-									// speed[speed_count++] = record->speed;
+									hr_buffer[count] = record->heart_rate;
+									pace[count] = convert_min_km(record->speed);
+									speed[count] = record->speed;
+									count++;
 									break;
 								}
 							default:
@@ -167,35 +169,31 @@ int main(int argc, char* argv[])
 
 	// NOTE: parsing done
 
-	uint32_t hr_max = find_max(hr_buffer, hr_count);
-	uint32_t hr_min = find_min(hr_buffer, hr_count);
-	// uint32_t speed_max = find_max(speed, speed_count);
-	// uint32_t speed_min = find_min(speed, speed_count);
-	// printf("speed max: %u, speed min: %u\n", speed_max, speed_min);
-	// printf("speed count: %zu, speed count: %zu\n", hr_count, speed_count);
+	uint32_t hr_max = find_max(hr_buffer, count);
+	uint32_t hr_min = find_min(hr_buffer, count);
+	uint32_t speed_max = find_max(speed, count);
+	uint32_t speed_min = find_min(speed, count);
 	InitWindow(WIDTH, HEIGHT, "run");
 	while (!WindowShouldClose())
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
 		size_t i = 0;
-		int index = get_value(0, hr_count, 0, WIDTH, GetMouseX());
-		DrawText(TextFormat("HR: %zu (bpm)\nPace: %f (min/km)", hr_buffer[index], speed[index]), 0, 0, TEXT_SIZE, GREEN);
-		while (i < hr_count)
+		int index = get_value(0, count, 0, WIDTH, GetMouseX());
+		DrawText(TextFormat("HR: %zu (bpm)\nPace: %.2f (min/km)", hr_buffer[index], pace[index]), 0, 0, TEXT_SIZE, GREEN);
+		while (i < count)
 		{
-			DrawRectangleLines(
-				LEFT_PAD + get_pixel(0, speed_count, 0, WIDTH, i),
-				HEIGHT,
+			DrawRectangle(
+				LEFT_PAD + get_pixel(0, count, 0, WIDTH, i),
+				HEIGHT - (int)(fmin(get_pixel(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
 				2,
-				// (int)(fmin(linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
-				(int)(fmin(get_pixel(0, 7, 0, HEIGHT, speed[i]), HEIGHT)) - HEIGHT,
+				(int)(fmin(get_pixel(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
 				YELLOW);
 			DrawCircle(
-				LEFT_PAD + get_pixel(0, hr_count, 0, WIDTH, i),
+				LEFT_PAD + get_pixel(0, count, 0, WIDTH, i),
 				HEIGHT - get_pixel(hr_min, hr_max, 0, HEIGHT, hr_buffer[i]),
 				5,
-				RED
-				);
+				RED);
 			i++;
 		}
 		EndDrawing();
