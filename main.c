@@ -7,19 +7,21 @@
 #include <raylib.h>
 #define FIT_CONVERT_TIME_RECORD
 #define FIT_CONVERT_CHECK_CRC
-#define LEFT_PAD 100
+#define LEFT_PAD 0
 #define DATA_SIZE 1024
 #if 0
 #define WIDTH 1920
 #define HEIGHT 1080
+#define TEXT_SIZE 40
 #else
 #define WIDTH 800
 #define HEIGHT 600
+#define TEXT_SIZE 20
 #endif
 
 uint32_t hr_buffer[DATA_SIZE] = {0};
 size_t hr_count = 0;
-uint32_t speed[DATA_SIZE] = {0};
+float speed[DATA_SIZE] = {0};
 size_t speed_count = 0;
 
 float get_pixel(int data_min, int data_max, int pixel_min, int pixel_max, int value)
@@ -30,7 +32,7 @@ float get_pixel(int data_min, int data_max, int pixel_min, int pixel_max, int va
 
 int get_value(int data_min, int data_max, int pixel_min, int pixel_max, int pixel)
 {
-	float ratio = (pixel_max - pixel_min)/(data_max - data_min);
+	float ratio = (float)(pixel_max - pixel_min)/(float)(data_max - data_min);
 	int value = (pixel - pixel_min)/ratio + data_min;
 	return value;
 }
@@ -178,16 +180,9 @@ int main(int argc, char* argv[])
 		ClearBackground(BLACK);
 		size_t i = 0;
 		int index = get_value(0, hr_count, 0, WIDTH, GetMouseX());
-		DrawText(TextFormat("HR: %zu\nY: %d", hr_buffer[index], GetMouseY()), 0, 0, 40, GREEN);
-		printf("index: %d, hr_buffer at index: %u\n", index, hr_buffer[index]); // looks like pixel value
+		DrawText(TextFormat("HR: %zu (bpm)\nPace: %f (min/km)", hr_buffer[index], speed[index]), 0, 0, TEXT_SIZE, GREEN);
 		while (i < hr_count)
 		{
-			DrawCircle(
-				LEFT_PAD + get_pixel(0, hr_count, 0, WIDTH, i),
-				HEIGHT - get_pixel(hr_min, hr_max, 0, HEIGHT, hr_buffer[i]),
-				2,
-				RED
-				);
 			DrawRectangleLines(
 				LEFT_PAD + get_pixel(0, speed_count, 0, WIDTH, i),
 				HEIGHT,
@@ -195,6 +190,12 @@ int main(int argc, char* argv[])
 				// (int)(fmin(linear_scale(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
 				(int)(fmin(get_pixel(0, 7, 0, HEIGHT, speed[i]), HEIGHT)) - HEIGHT,
 				YELLOW);
+			DrawCircle(
+				LEFT_PAD + get_pixel(0, hr_count, 0, WIDTH, i),
+				HEIGHT - get_pixel(hr_min, hr_max, 0, HEIGHT, hr_buffer[i]),
+				5,
+				RED
+				);
 			i++;
 		}
 		EndDrawing();

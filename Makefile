@@ -1,7 +1,7 @@
 CC=cc
 RAYLIB_PATH=./raylib-5.5_linux_amd64
 INCLUDE=-I. -I./c/ -I$(RAYLIB_PATH)/include/
-FLAGS=-Wall -Wextra -g
+FLAGS=-Wall -Wextra -Werror -g
 LIB=-Wl,-rpath=$(RAYLIB_PATH)/lib/ -L$(RAYLIB_PATH)/lib/ -l:libraylib.so -lm
 NAME=main
 SRC_PATH=./c/
