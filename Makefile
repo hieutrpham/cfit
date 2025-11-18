@@ -15,6 +15,9 @@ OBJS_MAIN=$(SRC_MAIN:%.c=$(OBJ_PATH)/%.o)
 
 all: $(NAME)
 
+run: all
+	./$(NAME) fartlek.FIT
+
 $(OBJ_PATH)%.o: $(SRC_PATH)%.c
 	@mkdir -p $(OBJ_PATH)
 	$(CC) $(FLAGS) $(INCLUDE) -o $@ -c $<

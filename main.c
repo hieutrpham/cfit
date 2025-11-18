@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,7 +11,9 @@
 #define FIT_CONVERT_CHECK_CRC
 #define LEFT_PAD 0
 #define DATA_SIZE 1024
-#if 1
+#define RECT_SIZE 2
+#define CIR_SIZE 5
+#if 0
 #define WIDTH 1920
 #define HEIGHT 1080
 #define TEXT_SIZE 40
@@ -178,6 +181,8 @@ int main(int argc, char* argv[])
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
+
+		#if 1
 		size_t i = 0;
 		int index = get_value(0, count, 0, WIDTH, GetMouseX());
 		DrawText(TextFormat("HR: %zu (bpm)\nPace: %.2f (min/km)", hr_buffer[index], pace[index]), 0, 0, TEXT_SIZE, GREEN);
@@ -186,16 +191,17 @@ int main(int argc, char* argv[])
 			DrawRectangle(
 				LEFT_PAD + get_pixel(0, count, 0, WIDTH, i),
 				HEIGHT - (int)(fmin(get_pixel(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
-				2,
-				(int)(fmin(get_pixel(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
+				RECT_SIZE,
+				(int)(get_pixel(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT),
 				YELLOW);
 			DrawCircle(
 				LEFT_PAD + get_pixel(0, count, 0, WIDTH, i),
 				HEIGHT - get_pixel(hr_min, hr_max, 0, HEIGHT, hr_buffer[i]),
-				5,
+				CIR_SIZE,
 				RED);
 			i++;
 		}
+		#endif
 		EndDrawing();
 	}
 	CloseWindow();
