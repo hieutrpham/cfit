@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -84,26 +85,57 @@ float convert_min_km(float ms)
 	return 1000*1000/(60*ms);
 }
 
+void usage()
+{
+	printf("Usage: ./main <fit file> [-whofit]\n");
+	printf("    -w: screen width\n");
+	printf("    -h: screen height\n");
+	printf("    -o: circle size\n");
+	printf("    -i: rectangle size \n");
+	printf("    -t: text size \n");
+	exit(1);
+}
+
 int main(int argc, char* argv[])
 {
+	int opt, width, height, rect_size, cir_size, text_size;
+	char *file_name;
+
+	if (argc < 2)
+		usage();
+
+	file_name = argv[1];
+	width = WIDTH;
+	height = HEIGHT;
+	rect_size = RECT_SIZE;
+	cir_size = CIR_SIZE;
+	text_size = TEXT_SIZE;
+	while ((opt = getopt(argc, argv, ":f:w:h:o:i:t:")) != -1)
+	{
+		switch (opt)
+		{
+			case 'f': file_name = optarg; break;
+			case 'w': width = atoi(optarg); break;
+			case 'h': height = atoi(optarg); break;
+			case 'o': cir_size = atoi(optarg); break;
+			case 'i': rect_size = atoi(optarg); break;
+			case 't': text_size = atoi(optarg); break;
+			default: usage();
+		}
+	}
+
 	FILE *file;
 	FIT_UINT8 buf[8];
 	FIT_CONVERT_RETURN convert_return = FIT_CONVERT_CONTINUE;
 	FIT_UINT32 buf_size;
 
-	if (argc < 2)
-	{
-		printf("usage: ./main <fit file>");
-		return FIT_FALSE;
-	}
-
-	printf("Testing file conversion using %s file...\n", argv[1]);
+	printf("Testing file conversion using %s file...\n", file_name);
 
 	FitConvert_Init(FIT_TRUE);
 
-	if((file = fopen(argv[1], "rb")) == NULL)
+	if((file = fopen(file_name, "rb")) == NULL)
 	{
-		printf("Error opening file %s.\n", argv[1]);
+		printf("Error opening file %s.\n", file_name);
 		return FIT_FALSE;
 	}
 
@@ -176,7 +208,7 @@ int main(int argc, char* argv[])
 	uint32_t hr_min = find_min(hr_buffer, count);
 	uint32_t speed_max = find_max(speed, count);
 	uint32_t speed_min = find_min(speed, count);
-	InitWindow(WIDTH, HEIGHT, "run");
+	InitWindow(width, height, "run");
 	while (!WindowShouldClose())
 	{
 		BeginDrawing();
@@ -184,20 +216,20 @@ int main(int argc, char* argv[])
 
 		#if 1
 		size_t i = 0;
-		int index = get_value(0, count, 0, WIDTH, GetMouseX());
-		DrawText(TextFormat("HR: %zu (bpm)\nPace: %.2f (min/km)", hr_buffer[index], pace[index]), 0, 0, TEXT_SIZE, GREEN);
+		int index = get_value(0, count, 0, width, GetMouseX());
+		DrawText(TextFormat("HR: %zu (bpm)\nPace: %.2f (min/km)", hr_buffer[index], pace[index]), 0, 0, text_size, GREEN);
 		while (i < count)
 		{
 			DrawRectangle(
-				LEFT_PAD + get_pixel(0, count, 0, WIDTH, i),
-				HEIGHT - (int)(fmin(get_pixel(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT)),
-				RECT_SIZE,
-				(int)(get_pixel(speed_min, speed_max, 0, HEIGHT, speed[i]), HEIGHT),
+				LEFT_PAD + get_pixel(0, count, 0, width, i),
+				height - (int)(fmin(get_pixel(speed_min, speed_max, 0, height, speed[i]), height)),
+				rect_size,
+				(int)(get_pixel(speed_min, speed_max, 0, height, speed[i]), height),
 				YELLOW);
 			DrawCircle(
-				LEFT_PAD + get_pixel(0, count, 0, WIDTH, i),
-				HEIGHT - get_pixel(hr_min, hr_max, 0, HEIGHT, hr_buffer[i]),
-				CIR_SIZE,
+				LEFT_PAD + get_pixel(0, count, 0, width, i),
+				height - get_pixel(hr_min, hr_max, 0, height, hr_buffer[i]),
+				cir_size,
 				RED);
 			i++;
 		}
