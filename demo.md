@@ -13,15 +13,9 @@ What is [FIT SDK](https://developer.garmin.com/fit/overview/)
 Tech Stack
 ---
 
-# C: parsing the FIT binary
-# Raylib: visualizing the data
-
+* C: parsing the FIT binary
 <!-- pause -->
-
-Motivation
----
-
-
+* Raylib: visualizing the data
 
 <!-- end_slide -->
 
@@ -32,24 +26,25 @@ What I've learned
 
 <!-- pause -->
 
-# what types of data my watch stores
+* what types of data my watch stores
 
 <!-- pause -->
-
-# float and int data type
+* float and int data type
+<!-- pause -->
+* `getopt`
 
 <!-- pause -->
-# visualizing data with Raylib
+* visualizing data with Raylib
 
 <!-- end_slide -->
 
 What's next?
 ---
 
-# refactor
-# prettify the visualization
-# includes more data and features
-# just move on
+* refactor
+* prettify the visualization
+* includes more data and features
+* just move on
 
 <!-- end_slide -->
 The end
