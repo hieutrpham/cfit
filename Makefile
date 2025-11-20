@@ -7,7 +7,7 @@ NAME=main
 SRC_PATH=./c/
 SRC=fit_crc.c fit_convert.c fit.c fit_example.c
 
-OBJ_PATH=obj
+OBJ_PATH=obj/
 OBJS = $(SRC:%.c=$(OBJ_PATH)/%.o)
 
 SRC_MAIN=main.c
