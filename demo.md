@@ -23,16 +23,15 @@ What I've learned
 ---
 
 * read and use external source code
-
+```c
+//#define FIT_USE_STDINT_H // Define to use stdint.h types. By default size in bytes of integer types assumed to be char=1, short=2, long=4.
+```
 <!-- pause -->
-
 * what types of data my watch stores
-
 <!-- pause -->
 * float and int data type
 <!-- pause -->
 * `getopt`
-
 <!-- pause -->
 * visualizing data with Raylib
 
